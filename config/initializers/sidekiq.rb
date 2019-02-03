@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'sidekiq/worker_killer'
+
 namespace    = ENV.fetch('REDIS_NAMESPACE') { nil }
 redis_params = { url: ENV['REDIS_URL'] }
 
@@ -12,6 +14,7 @@ Sidekiq.configure_server do |config|
 
   config.server_middleware do |chain|
     chain.add SidekiqErrorHandler
+    chain.add Sidekiq::WorkerKiller, max_rss: (ENV['WORKER_RAM_THRESHOLD'] || 512).to_i, grace_time: (ENV['WORKER_GRACE_TIME'] || 90).to_i
   end
 end
 
